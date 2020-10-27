@@ -1,13 +1,91 @@
+---
+title: "Introduction to Open Data Science: About the Project"
+author: "Teemu Pekkarinen - 014451658"
+---
 
-# About the project
+Introduction to Open Data Science. Happy to learn to connect Git and R even though the content of data analysis is *familiar* to me. I've used R MarkDown before and found it useful. In addition I've used Git before on [Tietokantojen Perusteet](https://github.com/teemupek/Tikape_Chat.git) course However, it's been a long time so recalling things is needed. Here's the [link](https://github.com/teemupek/IODS-project.git) to my GitHub repository.
 
-*Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
-
-```{r}
+Today is the following day.
+```{r echo=FALSE,}
 # This is a so-called "R chunk" where you can write R code.
 
 date()
 
 ```
-The text continues here.
 
+## Reminders
+
+I wanted to remind me what I've done last time with R MarkDown. I found a nice data on **exchange and forward rates**. I make a table and a graph of Sterling/EUR exchange rate. I uploaded `forward2.dat` to git repository and I call my data set from there in order to plot the rate.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, include=FALSE}
+
+ #### Packages ####
+rm(list=ls()) 
+library(dplyr)
+library(data.table)
+library(lmtest)
+library(tidyr)
+library(sandwich)
+library(knitr)
+
+```
+
+### Table of the exchange and forward rates
+```{r echo=FALSE, results='asis'}
+
+#### Data ####
+
+# EXUSBP : exchange rate USDollar/British Pound Sterling
+# EXUSEUR: exchange rate USDollar/euro
+# EXEURBP: exchange rate euro/pound
+# F1USBP : 1 month forward rate USD/pound
+# F1USEUR: 1 month forward rate USD/euro
+# F1EURBP: 1 month forward rate euro/pound
+# F3USBP : 3 month forward rate USD/pound
+# F3USEUR: 3 month forward rate USD/euro
+# F3EURBP: 3 month forward rate euro/pound
+forward2 <- fread("forward2.dat")
+forward2 <- as_data_frame(forward2)
+kable(summary(forward2))
+
+# Let's logarithmised the data
+fwd <- log(forward2)
+
+# Colnames
+colnames(fwd) <- c("s_usd_gbp",
+                   "s_usd_eur",
+                   "s_eur_gbp",
+                   "f1_usd_gbp",
+                   "f1_usd_eur",
+                   "f1_eur_gbp",
+                   "f3_usd_gbp",
+                   "f3_usd_eur",
+                   "f3_eur_gbp")
+
+```
+
+### Graph of the GBP/EUR exchange rate.
+
+```{r echo=FALSE}
+
+tsEurBp <- ts(exp(fwd$s_eur_gbp), frequency=12, start=c(1979,1), end = c(2001,12)) 
+plot(tsEurBp, main="GBP/EUR", xlab="", ylab="")
+
+```
+
+## Latex
+I'm happy to see that R MarkDown is linked to LaTeX syntax! Here's a maximization problem from my current research on the optimal mechanism design with enforcement:
+\begin{align}
+		\max_{r(\cdot),t(\cdot),m(\cdot)} \mathbb{E} \left[ t(\theta) - K m(\theta) \right]\label{OBJ} \tag{MAX}
+	\end{align}
+	subject to
+	\begin{align}
+		&t(\theta) = \theta r(\theta) - V(\underline{\theta}) - \int_{\underline{\theta}}^{\theta} \mathcal{I}(s|s)ds \label{TAX} \tag{TAX} \\
+		&\mathcal{I}(\theta|\theta) \qquad \text{is nondecreasing} \label{IC} \tag{IC} \\
+		&\mathcal{I}(\theta|\theta) \geq 0 \label{IR} \tag{IR} 
+	\end{align}
+	for all $\theta \in \Theta$ with $\mathcal{I}(\theta|\theta):=r(\theta) - m(\theta) \varphi$.

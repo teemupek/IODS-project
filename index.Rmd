@@ -1,5 +1,6 @@
 ---
 title: "IODS course project"
+author: "Teemu Pekkarinen"
 output:
   html_document:
     theme: cosmo
