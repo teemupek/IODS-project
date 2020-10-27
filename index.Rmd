@@ -1,6 +1,6 @@
 ---
 title: "IODS course project"
-author: "Teemu Pekkarinen"
+author: "Teemu Pekkarinen 014451658"
 output:
   html_document:
     theme: cosmo
