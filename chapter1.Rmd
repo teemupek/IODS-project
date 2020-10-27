@@ -1,7 +1,7 @@
 
 # About the Project
 
-Introduction to Open Data Science. Happy to learn to connect Git and R even though the content of data analysis is *familiar* to me. I've used R MarkDown before and found it useful. In addition I've used Git before on [Tietokantojen Perusteet](https://github.com/teemupek/Tikape_Chat.git) course However, it's been a long time so recalling things is needed. Here's the [link](https://github.com/teemupek/IODS-project.git) to my GitHub repository.
+Introduction to Open Data Science. Happy to learn to connect Git and R even though the content of data analysis is *familiar* to me. I've used R MarkDown before and found it useful. In addition I've used Git before on [Tietokantojen Perusteet](https://github.com/teemupek/Tikape_Chat.git) course. However, it's been a long time so recalling things is needed. Here's the [link](https://github.com/teemupek/IODS-project.git) to my IODS GitHub repository.
 
 Today is the following day.
 ```{r echo=FALSE,}
@@ -13,7 +13,7 @@ date()
 
 ## Reminders
 
-I wanted to remind me what I've done last time with R MarkDown. I found a nice data on **exchange and forward rates**. I make a table and a graph of Sterling/EUR exchange rate. I uploaded `forward2.dat` to git repository and I call my data set from there in order to plot the rate.
+I wanted to remind me what I've done last time with R MarkDown. I found a nice data on **exchange and forward rates**. I make a table and a graph of Sterling/EUR exchange rate. I uploaded `forward2.dat` to git repository and I call my data set from there in order to plot the rate. I hide the R code to make the outcome more readable.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
