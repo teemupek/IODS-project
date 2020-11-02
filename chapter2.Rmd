@@ -1,13 +1,242 @@
-# Insert chapter 2 title here
-
-*Describe the work you have done this week and summarize your learning.*
-
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
-
-```{r}
+# Analysis
+Today is
+```{r echo=FALSE}
 date()
 ```
 
-Here we go again...
+In this week we learn how to create data and analyse it. We read the data from the given [URL](https://www.mv.helsinki.fi/home/kvehkala/JYTmooc/JYTOPKYS2-data.txt). The meta descriptions can be found from [here](https://www.mv.helsinki.fi/home/kvehkala/JYTmooc/JYTOPKYS2-meta.txt).
+
+The dataset queries the relationship between learning approaches and students' achievements in an introductory statistics course in Finland. The original data have 183 responders (observations) for 97 questions (variables). For our purposes, we subset the dataset to contain variables gender, age, attitude, deep, stra, surf and points. The variables are either integers or numerics. The [meta-file](https://www.mv.helsinki.fi/home/kvehkala/JYTmooc/JYTOPKYS2-meta.txt) gives the following description for each variable:
+
+- Gender takes value 1 if the responder is male and 2 if female;
+- Age is the responders age in years;
+- Attitude is global attitude toward statistics determined as a sum of 10 questions numbered from 0 to 5 (1 negative, 5 positive);
+- Deep is deep approach for learning determined as a sum of 8 questions numbered from 0 to 5 (1 negative, 5 positive);
+- Stra is strategic approach for learning determined as a sum of 12 questions numbered from 0 to 5 (1 negative, 5 positive);
+- Surf is surface approach for learning determined as a sum of 12 questions numbered from 0 to 5 (1 negative, 5 positive);
+- Points is total points from each part.
+
+Next we omit the observations where the exam points variable is zero. After that we scale variables by the mean -- that is, we divide each combination variable by its number of questions asked. So we have 166 observations for 7 variables left. 
+
+## Descriptive Analysis
+Let us next read the data we created earlier in the data wranling part:
+```{r}
+# Read the data
+learning2014 <- read.csv("/Users/teemupekkarinen/IODS-project/data/learning2014",row.names = 1)
+```
+To summarize our dataset's content we run
+```{r}
+# Structure
+str(learning2014)
+# Dimension
+dim(learning2014)
+```
+That is, we have the information about gender, age, attitude, and three different learning approaches (deep, strategic, and surface) of 166 responders. All of the variables are numeric and the combination variables (attitude, deep, stra, and surf) are means. For more detailed description we run:
+```{r}
+# Summary
+summary(learning2014)
+```
+We observe that there are almost twice more female responders than male responders: 56 men and 110 women. The average age of the responders is 26 and the youngest person is 17 years old and the oldest 55 years old. The age distribution is wide but skewed towards young people. As summarize we can say than a typical responder is a young female.
+```{r}
+# Histrograms
+Gender <- learning2014$Gender
+hist(Gender,breaks=2)
+sum(Gender==1)
+Age <- learning2014$Age
+hist(Age)
+mean(Age)
+var(Age)
+```
+The average exam points is 28 with maximum 33 and minimum 7. The exam results are more or less normally distributed among all participants.
+```{r}
+# Histrograms
+Points <- learning2014$Points
+hist(Points)
+```
+However, when we compare the points between men and female, we observe that the mean of exam points for men is slightly greater than for women. There are even more men with score 30 or 31 than women.
+```{r}
+# Package
+library(ggplot2)
+
+# Histrograms
+PointsMale <- learning2014$Points[Gender==1]
+mean(PointsMale)
+PointsFemale <- learning2014$Points[Gender==2]
+mean(PointsFemale)
+data <- data.frame(
+  type = c( rep("Male", 56), rep("Female", 110) ),
+  value = c(PointsMale, PointsFemale)
+)
+ggplot(data, aes(x=value, fill=type)) +
+    geom_histogram(binwidth=.5, alpha=.5, position="identity")
+```
+The mean of attitude, 3.14, is almost neutral 3. That is, on average responders have a bit positive attitude towards statistics. Also attitude is nearly normally distributed. Male responders have more positive attitude than female.
+```{r}
+# Histrograms
+Attitude <- learning2014$Attitude
+hist(Attitude)
+AttitudeMale <- learning2014$Attitude[Gender==1]
+mean(PointsMale)
+AttitudeFemale <- learning2014$Attitude[Gender==2]
+mean(PointsFemale)
+data <- data.frame(
+  type = c( rep("Male", 56), rep("Female", 110) ),
+  value = c(AttitudeMale, AttitudeFemale)
+)
+ggplot(data, aes(x=value, fill=type)) +
+    geom_histogram(binwidth=.5, alpha=.5, position="identity")
+```
+The minority prefers surface learning approach to learning in the statistics course, whereas the majority prefers the methods of deep learning. Moreover, the greatest variation in learning methods is in strategic learning. Deep and surface learning is almost identically distributed expect deep learning has a greater mean.
+```{r}
+# Package
+library(ggplot2)
+
+# Histrograms
+Deep <- learning2014$Deep
+Stra <- learning2014$Stra
+Surf <- learning2014$Surf
+data <- data.frame(
+  type = c( rep("Deep", 166), rep("Stra", 166), rep("Surf", 166) ),
+  value = c(Deep, Stra, Surf)
+)
+ggplot(data, aes(x=value, fill=type)) +
+    geom_histogram(binwidth=.5, alpha=.5, position="identity")
+```
+There is no much difference between genders in learning methods; the distributions between male and female responders are almost indentically distributed.
+```{r}
+# Histrograms
+
+# Strategic Learning
+StraMale <- learning2014$Stra[Gender==1]
+StraFemale <- learning2014$Stra[Gender==2]
+data <- data.frame(
+  type = c( rep("Male", 56), rep("Female", 110) ),
+  value = c(StraMale, StraFemale)
+)
+ggplot(data, aes(x=value, fill=type)) +
+    geom_histogram(binwidth=.5, alpha=.5, position="identity")
+
+# Deep Learning
+DeepMale <- learning2014$Deep[Gender==1]
+DeepFemale <- learning2014$Deep[Gender==2]
+data <- data.frame(
+  type = c( rep("Male", 56), rep("Female", 110) ),
+  value = c(DeepMale, DeepFemale)
+)
+ggplot(data, aes(x=value, fill=type)) +
+    geom_histogram(binwidth=.5, alpha=.5, position="identity")
+
+# Surface Learning
+SurfMale <- learning2014$Surf[Gender==1]
+SurfFemale <- learning2014$Surf[Gender==2]
+data <- data.frame(
+  type = c( rep("Male", 56), rep("Female", 110) ),
+  value = c(SurfMale, SurfFemale)
+)
+ggplot(data, aes(x=value, fill=type)) +
+    geom_histogram(binwidth=.5, alpha=.5, position="identity")
+```
+
+## Regressions
+Next we run regressions where exam points is our dependent variable. Let us first look at the correlations between exam points and the explanatory variables.
+```{r}
+plot(Attitude, Points, main = "Regression",
+     xlab = "Attitude", ylab = "Points") + abline(lm(Points~Attitude), col = "blue")
+plot(Gender, Points, main = "Regression",
+     xlab = "Gender", ylab = "Points") + abline(lm(Points~Gender), col = "blue")
+plot(Age, Points, main = "Regression",
+     xlab = "Age", ylab = "Points") + abline(lm(Points~Age), col = "blue")
+plot(Deep, Points, main = "Regression",
+     xlab = "Deep Learning", ylab = "Points") + abline(lm(Points~Deep), col = "blue")
+plot(Stra, Points, main = "Regression",
+     xlab = "Strategic Learning", ylab = "Points") + abline(lm(Points~Stra), col = "blue")
+plot(Surf, Points, main = "Regression",
+     xlab = "Surface Learning", ylab = "Points") + abline(lm(Points~Surf), col = "blue")
+cov(learning2014)
+```
+From the single regressions and the covariance matrix we observe that there is negative correlation between points and gender, age, deep learning and surface learning. That is, what we already observed, men were doing better in the course than women. Moreover, it seems to be so that younger students got better exam results than the older participants. Strategic learning was the only method that has positive correlation between exam results. There is a big positive correaltion between attitude and points.
+
+Next we choose first gender, attitude and age to regress exam points.
+```{r}
+reg <- lm(Points~Gender+Attitude+Age)
+summary(reg)
+```
+From here we observe that attitude is the only significant explanatory variable by itself. However, by the F-test all three variables are *together* significant explanatories. 
+
+Nevertheless, following the instructions we drop off gender variable and run the regression again.
+```{r}
+# Regression
+reg <- lm(Points~Attitude+Age)
+summary(reg)
+```
+Attitude remains to be the strongest predictor. Age is still unsignifant even though together with attitude it is significant (F-test). It turns out, after trying all possible combinations of explanatory variables, only regressing with attitude we get 5 % significant level of *all* regressors. We thus lastly regress only with attitude and get the following.
+```{r}
+reg <- lm(Points~Attitude)
+summary(reg)
+```
+From the summary we observe that the intercept term is positive and significant: 11.63 with standard error of 1.83. This is the test score if attitude was "zero". Each unit jump in attitution increases (not causal) exam results by 3.5 points. Hence, with maximum attitude our model predicts that the test result is $11.63 + 5 * 3.5 = 29$ points.
+
+We observe also that R-squared decreases a little everytime we omit an explanatory variable from the regression. R-squared is the measure that represents the proportion of the variance for the dependent variable that is explained by explanatory variables. The adjusted R-squared is a modified version of R-squared that has been adjusted for the number of predictors in the model.
+
+Lastly we plot the regression diagnostic plots: Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage.
+```{r}
+plot(reg)
+```
+Residuals vs Fitted values figure is a simple scatterplot between residuals and predicted values. It should look more or less random, which is roughly the case in our analysis. The red line is not exactly zero all the time, which is a sign of that the residuals may have a little positive predictive power (omitted variable bias).
+
+The Normal QQ plot helps us to assess whether the residuals are roughly normally distributed. In our cases the tails scarper from the diagonal which may imply that we have some problems with assumption of normally distributed error terms. Probably some t-distribution could be better.
+
+The last plot for the residuals vs leverage (Cook’s distance) tells us which points have the greatest influence on the regression (leverage points). It turns out that points 35, 56, and 71 have the strongest effects on the dependent variable.
+
+## Causal Inference
+For the causal inference we need to have very strong assumptions.
+
+Before going to the assumptions, we introduce the vector and matrix notation. Define K-dimensional (column) vectors $\boldsymbol{x}_i$ and $\boldsymbol{\beta}$ as
+
+$$ 
+\underset{(K \times 1)}{\boldsymbol{x}_i} = 
+\begin{pmatrix}
+  x_{i1} \\ x_{i2} \\ \vdots \\ x_{iK}
+\end{pmatrix},  
+\underset{(K \times 1)}{\boldsymbol{\beta}} = 
+\begin{pmatrix}
+\beta_{1} \\ \beta_{2} \\ \vdots \\ \beta_{K}
+\end{pmatrix}.$$
+Also define
+$$ \underset{(n \times 1)}{\boldsymbol{y}} = 
+\begin{pmatrix}
+y_{1} \\ \vdots \\ y_{n}
+\end{pmatrix},  
+\underset{(n \times 1)}{\boldsymbol{\varepsilon}} = 
+\begin{pmatrix}
+\varepsilon_{1} \\ \vdots \\ \varepsilon_{n}
+\end{pmatrix},
+\underset{(n \times K)}{\boldsymbol{X}} = 
+\begin{pmatrix}
+\boldsymbol{x}'_{1} \\ \vdots \\ \boldsymbol{x}'_{n}
+\end{pmatrix} = 
+\begin{pmatrix}
+x_{11} & \dots & x_{1K} \\
+\vdots & \ddots & \vdots \\
+x_{n1} & \dots & x_{nK}
+\end{pmatrix}.
+$$
+Scalar quantities will be given in normal font $x$, vector quantities in bold
+lowercase $\boldsymbol{x}$, and all vectors will be presumed to be column vectors. Matrix quantities will be in bold uppercase $\boldsymbol{X}$. The transpose of a matrix is denoted by either $\boldsymbol{X}'$ or $\boldsymbol{X}^T$. 
+
+Using the matrix notation, the assumptions for the causal inference are the following
+
+Assumption 1.1 (linearity): 
+$$\underset{(n \times 1)}{\boldsymbol{y}} = 
+\underset{\underbrace{(n \times K)(K \times 1)}_{(n \times 1)}}{\boldsymbol{X} \: \: \: \boldsymbol{\beta}} +  \underset{(n \times 1)}{\boldsymbol{\varepsilon}}.$$
+
+Assumption 1.2 (strict exogeneity): 
+$$\mathbb{E}(\varepsilon_{i}|\boldsymbol{X}) = 0 \: \: \: (i = 1, 2, \dots, n).$$
+
+Assumption 1.3 (no multicollinearity): The rank of the $n \times K$ data matrix, $\boldsymbol{X}$, is $K$ with probability 1.
+
+Assumption 1.4 (spherical error variance): 
+$$(\text{homoskedasticity}) \: \: \mathbb{E}(\varepsilon_{i}^2|\boldsymbol{X}) = \sigma^2 > 0 \: \: \: (i = 1, 2, \dots, n),$$
+$$(\text{no correlation between observations}) \: \: \: \mathbb{E}(\varepsilon_{i}\varepsilon_{j}|\boldsymbol{X}) = 0 \: \: \: (i, j = 1, 2, \dots, n; i \neq j).$$
+
+Even though our regression diagnostic plots are promising, I would not make any kind of causal interpretations from our model.

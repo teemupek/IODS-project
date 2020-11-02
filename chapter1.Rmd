@@ -4,7 +4,7 @@
 Introduction to Open Data Science. Happy to learn to connect Git and R even though the content of data analysis is *familiar* to me. I've used R MarkDown before and found it useful. In addition I've used Git before on [Tietokantojen Perusteet](https://github.com/teemupek/Tikape_Chat.git) course. However, it's been a long time so recalling things is needed. Here's the [link](https://github.com/teemupek/IODS-project.git) to my IODS GitHub repository.
 
 Today is the following day.
-```{r echo=FALSE,}
+```{r echo=FALSE}
 # This is a so-called "R chunk" where you can write R code.
 
 date()
