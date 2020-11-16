@@ -1,4 +1,4 @@
-# Analysis
+# Regression and Model Validation
 Today is
 ```{r echo=FALSE}
 date()
