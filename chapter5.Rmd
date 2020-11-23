@@ -1,0 +1,164 @@
+# Dimensionality Reduction Techniques
+Today is
+```{r echo=FALSE}
+date()
+```
+
+This week we use the *'human'* dataset originates from the United Nations Development Programme. Graphical overview of the data and show summaries of the variables in the data is the following. We have 155 observations and 8 variables.
+```{r}
+# Read the data
+human <- read.csv("/Users/teemupekkarinen/IODS-project/data/human",row.names = 1)
+str(human)
+dim(human)
+summary(human)
+
+```
+Namely, the variables are
+
+- *Edu2.FM* The ratio of Female and Male populations with secondary education
+- *Labo.FM* The ratio of labour force participation of females and males
+- *Edu.Exp* Expected years in schooling
+- *Life.Exp* Life expectancy at birth
+- *GNI* Gross National Income per capita
+- *Mat.Mor* Maternal mortality rate
+- *Ado.Birth* Adolescent birth rate. The adolescent birth rate is calculated as the number of live births to adolescent women divided by the total number of adolescent women and multiplied by 1,000.
+- *Parli.F* Women's percent participation in parliament
+
+The data sorted by the GNI
+```{r}
+set.seed(1)
+s <- sample(1:nrow(human),20)
+subdata <- human[s,]
+sort.GNI <- subdata$GNI[order(subdata$GNI,decreasing = T)]
+barplot(sort.GNI, names.arg = row.names(subdata[order(subdata$GNI,decreasing = T),]), las=2)
+```
+
+The scatter plot of Life.Exp and GNI
+```{r}
+library(ggplot2)
+library(ggrepel)
+list <- c("Australia",
+"Azerbaijan","Belgium","Canada", "Chile", "China", "Cuba", "Denmark", 
+"Finland", "France", "Spain", "United States", "United Kingdom", "Germany", "India", "Greece", "Ghana", "Israel", "Hungary", "Niger", "Argentina", "Mexico", "Venezuela", "Mongolia", "Morocco", "Nepal", "Namibia", "Pakistan", "Peru", "Philippines", "Romania", "Tajikistan", "Tunisia", "Senegal", "Zambia")
+s <- which(rownames(human) %in% list)
+p <- ggplot(human[s,], aes(Life.Exp, GNI)) +
+  geom_point(color = 'red') +
+  theme_classic(base_size = 10) + labs(y = 'Gross National Income per capita', x = 'Life expectancy at birth')
+p + geom_text_repel(aes(label = rownames(human[s,])),
+                    size = 3.5) 
+```
+
+The scatter plot of Edu.Exp and GNI
+```{r}
+p <- ggplot(human[s,], aes(Edu.Exp, GNI)) +
+  geom_point(color = 'red') +
+  theme_classic(base_size = 10) + labs(y = 'Gross National Income per capita', x = 'Expected years in schooling')
+p + geom_text_repel(aes(label = rownames(human[s,])),
+                    size = 3.5) 
+```
+
+The scatter plot of Edu2.FM and GNI
+```{r}
+p <- ggplot(human[s,], aes(Edu2.FM, GNI)) +
+  geom_point(color = 'red') +
+  theme_classic(base_size = 10) + labs(y = 'Gross National Income per capita', x = 'The ratio of Female and Male populations with secondary education')
+p + geom_text_repel(aes(label = rownames(human[s,])),
+                    size = 3.5) 
+```
+
+The scatter plot of Labo.FM and GNI
+```{r}
+p <- ggplot(human[s,], aes(Labo.FM, GNI)) +
+  geom_point(color = 'red') +
+  theme_classic(base_size = 10) + labs(y = 'Gross National Income per capita', x = 'The ratio of labour force participation of females and males')
+p + geom_text_repel(aes(label = rownames(human[s,])),
+                    size = 3.5) 
+```
+
+The scatter plot of Parli.F and GNI
+```{r}
+p <- ggplot(human[s,], aes(Parli.F, GNI)) +
+  geom_point(color = 'red') +
+  theme_classic(base_size = 10) + labs(y = 'Gross National Income per capita', x = 'Women\'s participation in parliament (percent)')
+p + geom_text_repel(aes(label = rownames(human[s,])),
+                    size = 3.5) 
+```
+
+To summarize the correlations betweem variables let us plot the correlation matrix.
+```{r}
+library(corrplot)
+corr_matrix<-cor(human)
+corrplot(corr_matrix)
+```
+
+## Principal Component Analysis
+Principal Component Analysis (PCA) can be performed by two sightly different matrix decomposition methods from linear algebra: the Eigenvalue Decomposition and the Singular Value Decomposition (SVD).
+
+Both methods quite literally decompose a data matrix into a product of smaller matrices, which let's us extract the underlying principal components. This makes it possible to approximate a lower dimensional representation of the data by choosing only a few principal components.
+
+Let us next perform the PCA for our *human* data.
+```{r}
+# perform principal component analysis (with the SVD method)
+pca_human <- prcomp(human)
+pca_human
+summary(pca_human)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human, choices = 1:2)
+
+library(ggfortify)
+pca.plot <- autoplot(pca_human, data = human, colour = 'GNI')
+pca.plot
+```
+
+And the same for standarized data:
+```{r}
+# perform principal component analysis (with the SVD method)
+pca_human <- prcomp(scale(human))
+pca_human
+summary(pca_human)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human, choices = 1:2)
+pca.plot <- autoplot(pca_human, data = scale(human), colour = 'GNI')
+pca.plot
+```
+
+In PCA scale is necessary as it removes the biases in the original variables. Especially in our case in which we have variables in different units. The standardized variables will be unitless and have a similar variance, which allows to divide the data in components that try to explain the variance of the data as much as possible(!). Hence, it is reasonable to interpret only the results for the standardised data.
+
+The first principal component is able to capture 54 percent of the total variability of the data. The second component 16 percent and the third 10 percent. The lower components explain less than 10 percent in total of 30 percent. That is, three first principal components can explain 80 percent of the total variability of the whole *human* data.
+
+From the biplot and loadings plot, we can see the variables *Labo.FM* and *Parli.F* are highly associated and form a cluster. On the other hand, variables *Ado.Birth* and *Mat.Mor* form a cluster and are associated as well. And the third and the greatest cluster is formed by *Edu.Exp*, *Life.Exp*,*Edu2.FM*, and *GNI*. In clusters there are a strong positive correlation between the variables. The length of PCs in biplot refers to the amount of variance contributed by the PCs. The longer the length of PC, the higher the variance contributed and well represented in space. If the variables are highly associated, the angle between the variable vectors should be as small as possible in the biplot. It seems to be so that the clusters are divided in three: *women rights*, *child mortality*, and *education*. The first principal component explains the variation in *child mortality* and *education*, and the second principal component the *women rights*.
+
+## Tea dataset
+Lastly we load the tea dataset from the package **FactoMineR** and explore the data briefly. The data used here concern a questionnaire on tea. They asked to 300 individuals how they drink tea (18 questions), what are their product's perception (12 questions) and some personal details (4 questions). A data frame with 300 rows and 36 columns. Rows represent the individuals, columns represent the different questions. The first 18 questions are active ones, the 19th is a supplementary quantitative variable (the age) and the last variables are supplementary categorical variables.
+```{r}
+library(FactoMineR)
+library(dplyr)
+library(tidyr)
+
+# reduced dataset
+data(tea)
+tea_time <- select(tea, c("Tea", "How", "how", "sugar", "where", "lunch"))
+str(tea_time)
+dim(tea_time)
+summary(tea_time)
+
+# visualize the dataset
+gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+# multiple correspondence analysis
+mca <- MCA(tea_time, graph = FALSE)
+
+# summary of the model
+summary(mca)
+
+# visualize MCA
+plot(mca, invisible=c("ind"), habillage = "quali")
+```
+
+To summarize the data we find the following. People mostly drink tea in tea bags and without lemon and milk. The most common time to drink tea is not lunch time. People are divided between drinking tea with and without sugar. Earl Grey is the most popular brand and it people buy their tea from chain stores.
+
+Based on the MCA we can conclude that unpacked tea is bought from tea shops and tea bags from chain stores. There is a cluster of drinking tea in outside of lunch time without any additional ingredients (milk or lemon). Moreover, it seems to be so that there is a little correlation between drinking Earl Grey with milk. Green tea is 
+
+

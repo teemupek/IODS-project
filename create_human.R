@@ -20,8 +20,19 @@ gii$Labo.FM <- gii$Labo.F / gii$Labo.M
 # The join data
 human <- merge(hd,gii,by="Country")
 
+# Transform GNI to numeric
+human$GNI <- as.numeric(gsub(",","",human$GNI))
+
+# Remove all rows with missing values
+# This also removes the observations which relate to regions instead of countries since the non-countries have NA-values
+human <- na.omit(human)
+
+# Exclude unneeded variables and define the row names of the data by the country names and remove the country name column from the data
+row.names(human) <- human$Country
+human <- subset(human,select=c("Edu2.FM", "Labo.FM", "Edu.Exp", "Life.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F"))
+
 # Set the working directory
 setwd("/Users/teemupekkarinen/IODS-project/data")
 
-# Save the working dataset
+# Save the working data set
 write.csv(human,"human")
