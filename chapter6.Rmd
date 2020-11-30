@@ -1,0 +1,122 @@
+# Analysis of Longitudinal Data
+Today is
+```{r echo=FALSE}
+date()
+```
+
+This week we practise the analysis of longitudinal data. We will make graphical displays and summaries. We use the data RATS given by here: \url{https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt} The data is from a nutrition study conducted in three groups of rats (Crowder and Hand, 1990). The three groups were put on different diets, and each animal’s body weight (grams) was recorded repeatedly (approximately
+weekly, except in week seven when two recordings were taken) over a 9-week
+period.
+
+```{r}
+# Access the packages dplyr and tidyr
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(knitr)
+
+# Read the data
+RATSL <- read.csv("/Users/teemupekkarinen/IODS-project/data/RATSL",row.names = 1,stringsAsFactors = T)
+str(RATSL)
+dim(RATSL)
+summary(RATSL)
+
+# Factor ID & Group
+RATSL$ID <- factor(RATSL$ID)
+RATSL$Group <- factor(RATSL$Group)
+
+# Take a glimpse at the RATSL data
+glimpse(RATSL)
+
+# Table 
+kable(RATSL[1:16,])
+
+# Draw the plot
+ggplot(RATSL, aes(x = Time, y = Rats, linetype = ID)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(RATSL$Rats), max(RATSL$Rats)))
+
+```
+
+That is, there are different 16 rats for which the table above gives the initial weight in day 1. The first figure shows how the weight of rats in each group evolve over the test period. Clearly there are differences in weights between groups. Moreover, in group 2 there is a clear outlier of a huge rat.
+```{r}
+
+# Standardise the variable Rats
+RATSL <- RATSL %>%
+  group_by(Time) %>%
+  mutate(stdRats = (Rats - mean(Rats))/sd(Rats) ) %>%
+  ungroup()
+
+# Glimpse the data
+glimpse(RATSL)
+
+# Plot again with the standardised Rats
+ggplot(RATSL, aes(x = Time, y = stdRats, linetype = ID)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both) +
+  scale_y_continuous(name = "standardized Rats")
+
+```
+
+```{r}
+
+# Number of time periods, baseline (time 1) included
+n <- RATSL$Time %>% unique() %>% length()
+
+# Summary data with mean and standard error of Rats by Group and Time 
+RATSS <- RATSL %>%
+  group_by(Group, Time) %>%
+  summarise( mean = mean(Rats), se = sd(Rats)/sqrt(n) ) %>%
+  ungroup()
+
+# Glimpse the data
+glimpse(RATSS)
+
+# Plot the mean profiles
+ggplot(RATSS, aes(x = Time, y = mean, linetype=Group, shape = Group)) +
+  geom_line() +
+  scale_linetype_manual(values = c(1,2,3)) +
+  geom_point(size=4) +
+  scale_shape_manual(values = c(1,2,3)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se, linetype="1"), width=0.3) +
+  theme(legend.position = c(0.8,0.5)) +
+  scale_y_continuous(name = "mean(Rats) +/- se(Rats)")
+
+```
+
+```{r}
+
+# Create a summary data by Group and ID with mean as the summary variable (ignoring baseline time period 1).
+RATSL8S <- RATSL %>%
+  filter(Time > 1) %>%
+  group_by(Group, ID) %>%
+  summarise( mean=mean(Rats) ) %>%
+  ungroup()
+
+# Glimpse the data
+glimpse(RATSL8S)
+
+# Draw a boxplot of the mean versus treatment
+ggplot(RATSL8S, aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(Rats), time periods 2-64")
+
+# Create a new data by filtering the outlier and adjust the ggplot code the draw the plot again with the new data
+RATSL8S1 <- RATSL8S %>%
+  filter(mean < 550)
+
+# Glimpse the data
+glimpse(RATSL8S1)
+
+# Draw a boxplot of the mean versus treatment
+ggplot(RATSL8S1, aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(Rats), time periods 2-64")
+
+```
