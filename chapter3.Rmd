@@ -1,0 +1,141 @@
+# Logistic regression
+Today is
+```{r echo=FALSE}
+date()
+```
+As you can see from the date stamp, I am doing this exercise that I missed due to personal issues. However, I wanted to learn also this part of the course and thus decided to do the exercises whether that is necessary or not.
+
+## Alcohol Consumption Data
+We start by reading the data we created in the data wrangling part
+```{r}
+joinedData <- read.csv("/Users/teemupekkarinen/IODS-project/data/joinedData.csv",row.names = 1)
+```
+and use the glimpse to our data.
+```{r}
+library(dplyr)
+glimpse(joinedData) 
+```
+
+We have 382 observations and 35 variables. There are individual level background variables like gender, age, school performance, and alcohol consumption. Moreover, we have variables that are related to individuals parental background like family size, parents' cohabitation status, and parental education status.
+
+The summary of the data is the following.
+```{r}
+summary(joinedData)
+```
+
+We are going to the following four variables in our analysis:
+
+- Student's gender
+- Age
+- Father's Education
+- Absence
+
+By this choices we want to see if there is evidence that males drink more and control this by age. Father's education we use as a proxy variables for socioeconomic status. This gives us insight if people in lower socioeconomic status consume more alcohol. Lastly, we control alcohol consumption by school attendance.
+
+To that end, we manipulate our data as follows.
+```{r}
+library(tidyr)
+library(ggplot2)
+library(GGally)
+library(dplyr)
+analysisAlc <- joinedData %>%
+  select(sex, age, Fedu, absences, high_use)
+analysisAlc$Fedu <- cut(analysisAlc$Fedu, breaks = c(-Inf, 0, 1, 2, 3, Inf), labels= c("None", "primaryLow", "primaryHigh", "secondary", "Tertiary")  )
+analysisAlc$Fedu <- factor(analysisAlc$Fedu)
+summary(analysisAlc)
+```
+
+## Descriptive Analysis
+Let us next do some descriptive analysis for our data. We begin by plotting historgrams.
+```{r}
+gather(analysisAlc) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
+```
+
+From here we can see that approximately 1/3 of the sample are high users of alcohol. The individuals almost equally shared to female and male youngsters, mostly 15-18 years old, and their farthers are well educated. The distribution of absences in school has dispersion; there are students who are almost never absent and students whose are absent very often. 
+
+Next we draw some boxplots.
+```{r}
+box <- ggplot(analysisAlc, aes(x = high_use  , y = absences, col = Fedu ))
+box + geom_boxplot() + ylab("Absences")
+box2 <- ggplot(analysisAlc, aes(x = high_use  , y = age, col =  Fedu  ))
+box2 + geom_boxplot() + ylab("age")
+```
+The median number of absences is slightly greater among high alcohol users. Moreover, it seems to be so that high alcohol users are older (the median is higher). This, naturally, sounds reasonable statistics.
+
+Next we do a table that shows the fraction of high alcohol users by the father's educational background. It seems to be so there is no connection between high alcohol use and father's education.
+```{r}
+library(knitr)
+library(dplyr)
+table <- analysisAlc %>%
+  group_by(Fedu) %>%
+  summarise(mean_high_use=mean(high_use))
+kable(table)
+```
+Next we analyse alcohol use by age and gender.
+```{r}
+library(tidyr)
+table <- analysisAlc %>%
+  group_by(sex) %>%
+  summarise(mean_high_use=mean(high_use))
+kable(table)
+```
+This indicates that boys drink more alcohol than girls.
+ 
+
+
+## Logistic Regression
+
+In this section we use logistic regression to highlight our descriptive findings.
+
+We start by running the model and summarizing the results
+```{r}
+model <- glm(high_use ~ sex + absences + age + Fedu,  data = analysisAlc, family = "binomial")
+summary(model)
+coef(model)
+```
+
+All the coefficients of the regression are positive. Hence, if an individual is old, male, and has a high number of absences, the probability of high alcohol consumption is greater. However, the effects of age and father's education are not significant.
+
+Let us next calculate odds ratios for the variables. 
+```{r}
+OR <- coef(model) %>% exp
+CI <- confint(model) %>% exp
+cbind(OR, CI)
+```
+Here we again see that age and father's education are not statistically significant.Therefore let us drop these two and run the model again. 
+```{r}
+model2 <- glm(high_use ~ sex + absences,  data = analysisAlc, family = "binomial")
+OR <- coef(model2) %>% exp
+CI <- confint(model2) %>% exp
+cbind(OR, CI)
+```
+
+Now the odds ratio for the male indicator is statistically significant. The coefficient value 2.66 means that if a person is a male, the odds of high alcohol consumption is 2.6 times greater when absences are held constant. The odds ratio of abcenses is 1.1 indicating that if absences increase by one, the odds of high alcohol usage increases by 1.1.
+
+Next we make some predictions.
+```{r, warning=FALSE}
+library(visreg)
+library(caret)
+library(sjlabelled)
+model2 <- glm(high_use ~ sex + absences, data = analysisAlc, family = "binomial")
+probs <- predict(model2, type = "response")
+analysisAlc<- mutate(analysisAlc, probability = probs)
+analysisAlc <- mutate(analysisAlc, prediction = probability > 0.5)
+table(high_use = analysisAlc$high_use, prediction = analysisAlc$prediction)
+table(high_use = analysisAlc$high_use, prediction = analysisAlc$prediction) %>%
+    prop.table() %>% addmargins
+g <- ggplot(analysisAlc, aes(x = probability, y = high_use , col = prediction))
+g +  geom_point()
+```
+
+We observe many false-negative predictions. That is, it is likely that our model indicates that a person does not consume lot of alcohol in the case if she or he really does so.
+
+Based on the following loss functions we observe that approximately 1/4 our model's predictions are wrong. The latter loss function value says our model is still better than just randomization.
+```{r}
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+loss_func(class = analysisAlc$high_use, prob = analysisAlc$probability)
+loss_func(class = analysisAlc$high_use, prob = 0.333)
+```
